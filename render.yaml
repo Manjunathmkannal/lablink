@@ -1,0 +1,50 @@
+# render.yaml – Render deployment configuration for LabLink
+# Docs: https://render.com/docs/yaml-spec
+#
+# This deploys a single Render Web Service running:
+#   1. npm run build  (builds React frontend into frontend/dist/)
+#   2. gunicorn run:app  (serves Flask API + built React SPA)
+#
+# Required environment variables (set in Render dashboard – never in this file):
+#   SECRET_KEY          : cryptographically random string (32+ chars)
+#   MONGO_URI           : MongoDB Atlas connection string
+#   FLASK_ENV           : production
+#   CORS_ORIGIN         : your Render service URL, e.g. https://lablink.onrender.com
+#
+# Optional:
+#   WATSONX_API_KEY     : IBM Cloud API key (leave blank to run in stub mode)
+#   WATSONX_PROJECT_ID  : IBM watsonx.ai project ID
+#   WATSONX_URL         : defaults to https://us-south.ml.cloud.ibm.com
+#   JWT_ACCESS_TOKEN_EXPIRES_MINUTES  : default 15
+#   JWT_REFRESH_TOKEN_EXPIRES_DAYS    : default 7
+
+services:
+  - type: web
+    name: lablink
+    runtime: python
+    region: oregon
+    plan: free
+
+    # Working directory for all commands is the repo root.
+    # Build step: install production Python deps, then build the React frontend.
+    buildCommand: pip install -r backend/requirements-prod.txt && cd frontend && npm ci && npm run build
+
+    # Start Gunicorn from the backend directory so Python imports resolve correctly.
+    # run:app → module run.py, Flask object named app.
+    startCommand: cd backend && gunicorn run:app --bind "0.0.0.0:$PORT" --workers 2 --timeout 120
+
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true          # Render auto-generates a secure value
+      - key: MONGO_URI
+        sync: false                  # Must be supplied manually in Render dashboard
+      - key: CORS_ORIGIN
+        sync: false                  # Set to your Render service URL
+      - key: WATSONX_API_KEY
+        sync: false                  # Optional – leave blank for stub AI mode
+      - key: WATSONX_PROJECT_ID
+        sync: false
+      - key: WATSONX_URL
+        value: https://us-south.ml.cloud.ibm.com

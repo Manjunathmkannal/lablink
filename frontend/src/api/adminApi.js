@@ -1,0 +1,10 @@
+import api from "./axiosInstance";
+export const adminDashboard  = ()  => api.get("/api/admin/dashboard");
+export const adminAnalytics  = (p) => api.get("/api/admin/analytics",   { params: p });
+export const listUsers       = (p) => api.get("/api/admin/users",        { params: p });
+export const createUser      = (d) => api.post("/api/admin/users",       d);
+export const updateUser      = (id,d)=>api.put(`/api/admin/users/${id}`, d);
+export const deleteUser      = (id)=> api.delete(`/api/admin/users/${id}`);
+export const listDepartments = ()  => api.get("/api/admin/departments");
+export const listLaboratories= (p) => api.get("/api/admin/laboratories", { params: p });
+export const adminBookings   = (p) => api.get("/api/admin/bookings",     { params: p });
